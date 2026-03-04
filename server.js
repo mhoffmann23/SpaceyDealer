@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
+const { Pool } = require('pg');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
 const path = require('path');
@@ -11,10 +11,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-// app.use(express.static('public')); // Removed because public folder creation failed
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
-});
+
 app.use(session({
     secret: 'secret-key', // Change this in production
     resave: false,
@@ -22,47 +19,59 @@ app.use(session({
 }));
 
 // Database Setup
-const db = new sqlite3.Database('./users.db', (err) => {
-    if (err) console.error(err.message);
-    else console.log('Connected to the SQLite database.');
+// Use DATABASE_URL for Render PostgreSQL
+const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.DATABASE_URL ? { rejectUnauthorized: false } : false
 });
 
-db.run(`CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT UNIQUE,
-    password TEXT
-)`);
+// Create tables on startup
+const createTableQuery = `
+    CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL
+    );
+`;
+
+pool.query(createTableQuery)
+    .then(() => console.log('Users table ready'))
+    .catch(err => console.error('Error creating table', err));
 
 // Routes
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        db.run(`INSERT INTO users (username, password) VALUES (?, ?)`, [username, hashedPassword], function(err) {
-            if (err) {
-                return res.status(400).send('User already exists or error occurred.');
-            }
-            res.redirect('/?message=Registration successful! Please login.');
-        });
+        await pool.query('INSERT INTO users (username, password) VALUES ($1, $2)', [username, hashedPassword]);
+        res.redirect('/?message=Registration successful! Please login.');
     } catch (e) {
-        res.status(500).send('Error registering user.');
+        console.error(e);
+        res.redirect('/?error=User already exists or error occurred.');
     }
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
     const { username, password } = req.body;
-    db.get(`SELECT * FROM users WHERE username = ?`, [username], async (err, row) => {
-        if (err || !row) {
-            return res.redirect('/?error=Invalid credentials');
-        }
-        if (await bcrypt.compare(password, row.password)) {
-            req.session.userId = row.id;
-            req.session.username = row.username;
-            res.send(`<h1>Login successful!</h1><p>Welcome, ${row.username}.</p><a href="/logout">Logout</a>`);
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+        const user = result.rows[0];
+
+        if (user && await bcrypt.compare(password, user.password)) {
+            req.session.userId = user.id;
+            req.session.username = user.username;
+            res.send(`<h1>Login successful!</h1><p>Welcome, ${user.username}.</p><a href="/logout">Logout</a>`);
         } else {
             res.redirect('/?error=Invalid credentials');
         }
-    });
+    } catch (e) {
+        console.error(e);
+        res.redirect('/?error=Login error');
+    }
 });
 
 app.get('/logout', (req, res) => {
