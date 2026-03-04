@@ -136,4 +136,14 @@ dist
 
 # Vite logs files
 vite.config.js.timestamp-*
-vite.config.ts.timestamp-*
+# Visual Studio
+.vs/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# SQLite
+*.db
+
