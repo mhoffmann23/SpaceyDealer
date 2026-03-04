@@ -11,10 +11,15 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+<<<<<<< Updated upstream
 // app.use(express.static('public')); // Removed because public folder creation failed
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
+=======
+app.use(express.static(path.join(__dirname, 'public')));
+
+>>>>>>> Stashed changes
 app.use(session({
     secret: 'secret-key', // Change this in production
     resave: false,
@@ -34,6 +39,13 @@ db.run(`CREATE TABLE IF NOT EXISTS users (
 )`);
 
 // Routes
+<<<<<<< Updated upstream
+=======
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+>>>>>>> Stashed changes
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
     try {
@@ -51,6 +63,7 @@ app.post('/register', async (req, res) => {
 
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
+<<<<<<< Updated upstream
     db.get(`SELECT * FROM users WHERE username = ?`, [username], async (err, row) => {
         if (err || !row) {
             return res.redirect('/?error=Invalid credentials');
@@ -59,6 +72,16 @@ app.post('/login', (req, res) => {
             req.session.userId = row.id;
             req.session.username = row.username;
             res.send(`<h1>Login successful!</h1><p>Welcome, ${row.username}.</p><a href="/logout">Logout</a>`);
+=======
+    try {
+        const result = await pool.query('SELECT * FROM users WHERE username = $1', [username]);
+        const user = result.rows[0];
+
+        if (user && await bcrypt.compare(password, user.password)) {
+            req.session.userId = user.id;
+            req.session.username = user.username;
+            res.redirect('/game'); // Redirect to game after login
+>>>>>>> Stashed changes
         } else {
             res.redirect('/?error=Invalid credentials');
         }
