@@ -11,6 +11,7 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(express.static(__dirname)); // Serve static files from root
 
 app.use(session({
     secret: 'secret-key', // Change this in production
@@ -64,7 +65,7 @@ app.post('/login', async (req, res) => {
         if (user && await bcrypt.compare(password, user.password)) {
             req.session.userId = user.id;
             req.session.username = user.username;
-            res.send(`<h1>Login successful!</h1><p>Welcome, ${user.username}.</p><a href="/logout">Logout</a>`);
+            res.redirect('/game.html');
         } else {
             res.redirect('/?error=Invalid credentials');
         }

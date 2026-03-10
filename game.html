@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Vector Space</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #ffffff; /* White background */
+            color: #000000; /* Black text */
+            font-family: 'Courier New', Courier, monospace; /* Retro font */
+        }
+        canvas {
+            display: block;
+        }
+        #ui-layer {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            pointer-events: none;
+            text-transform: uppercase;
+        }
+        #message-area {
+            position: absolute;
+            top: 20%;
+            width: 100%;
+            text-align: center;
+            font-size: 24px;
+            font-weight: bold;
+            display: none;
+            text-shadow: 1px 1px 0 #fff;
+        }
+        #hangar-menu {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border: 2px solid black;
+            padding: 20px;
+            text-align: center;
+            pointer-events: auto;
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.2);
+            min-width: 300px;
+        }
+        .btn {
+            background: white;
+            color: black;
+            border: 2px solid black;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 16px;
+            font-weight: bold;
+            display: block;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .btn:hover {
+            background: #000;
+            color: white;
+        }
+        .hud-text {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        #controls-hint {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            font-size: 12px;
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="ui-layer">
+        <div class="hud-text">SPEED: <span id="speed">0</span> M/S</div>
+        <div class="hud-text">POS: <span id="coords">0, 0</span></div>
+        <div class="hud-text">TARGET: <span id="target-dist">N/A</span></div>
+        <div class="hud-text" style="color:red" id="warning"></div>
+    </div>
+    
+    <div id="message-area"></div>
+
+    <div id="hangar-menu">
+        <h2>STATION SERVICES</h2>
+        <div style="margin-bottom: 15px; border-bottom: 1px solid black;">Welcome, Commander.</div>
+        <button class="btn" id="refuel-btn">REFUEL / REPAIR</button>
+        <button class="btn" id="trade-btn">MARKET</button>
+        <button class="btn" id="launch-btn">LAUNCH (30s)</button>
+    </div>
+
+    <div id="controls-hint">
+        WASD / ARROWS to Fly | SPACE to Brake (Stabilize) | SHIFT to Boost
+    </div>
+
+    <canvas id="gameCanvas"></canvas>
+    <script src="game.js"></script>
+</body>
+</html>
